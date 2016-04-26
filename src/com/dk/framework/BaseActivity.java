@@ -3,6 +3,7 @@ package com.dk.framework;
 import java.io.File;
 import com.dk.framework.biz.Business;
 import com.dk.framework.classloader.HotpatchClassLoader;
+import com.dk.secure.LoadListener;
 
 import android.app.Activity;
 import android.os.Bundle;
@@ -15,11 +16,13 @@ public class BaseActivity extends Activity{
 	protected HotpatchClassLoader classLoader ;
 	String classPath , jarOrDex;
 	protected Business biz ;
+	protected LoadListener listener;
 
 	
 	@Override
 	public void onCreate(Bundle savedInstanceState){
 		super.onCreate(savedInstanceState) ;
+		listener = new LoadListener() ;
 		if(biz != null ){
 			biz.onCreate() ;
 		}
@@ -31,8 +34,13 @@ public class BaseActivity extends Activity{
 	}
 	
 	public void init(){
-		if(classPath !=null && jarOrDex!=null)
+		if(classPath !=null && jarOrDex!=null){
+			if(!listener.checkResource(classPath, jarOrDex)){
+				return ;
+			}
+			listener.startListen() ;
 			initClassLoader() ;
+		}
 	}
  
 	private void initClassLoader(){
@@ -46,6 +54,8 @@ public class BaseActivity extends Activity{
 		} catch (Exception e) {
 			//init class failed
 			e.printStackTrace();
+		}finally{
+			listener.finishListen() ;
 		}
 	 }
 	
